@@ -1,0 +1,97 @@
+To Implement service provider:
+
+1. Make a directory in App Folder
+2. Make a PayPal.php file in It
+3. write the following code
+
+<?php
+namespace App\PaymentService;
+
+class PayPalAPI
+{
+    private $transaction_id;
+
+    public function __construct($transaction_id)
+    {
+        $this->transaction_id = $transaction_id;
+    }
+
+    // public function Pay():string
+    public function Pay():array
+    {
+            // return "Your Bill Paid using Paypal";           
+            // return ['amount' => 123,'transaction'=>'dhgksagkasj'];
+
+            return ['amount' => 123,'transaction'=>$this->transaction_id];
+    }
+}
+
+*****  Here Pay() Function is a Service which will get injected somewhere to use 
+*****  Here Firat trt the code without line no. 12 to 17 and 20, 23 and 25
+***** To run rest of code of this service let inject it directly into web .php
+
+Come to web.php
+
+Write the following code....
+
+import the PayPalAPI class of PaymentService directory
+
+=>   use App\PaymentService\PayPalAPI;
+
+now write the service call function
+
+Route::get('/payment', function (PayPalAPI $payment) {
+    // dd($request);
+    
+    dump($payment->Pay());
+    
+    // dd(app());
+});
+
+***** Here First try this line 44 only with function argument as "Request $request" then, with no argument in function
+and line no 48, and at last with "PayPAl $payment" argument with line 46.
+
+
+Now to make a provider run a command:
+
+=>  php artisan make:provider PaymentServiceProvider
+
+it will make a service provider file in provider folder of App
+
+Now come again into PayPalAPI.php file and 
+
+write all code except line no. 19, 22 and 23.
+
+Now goto newly created PaymentServiceProvider.php file and write the code in Registr function:
+
+$this->app->bind(PayPalAPI::class,function(){
+            return new PayPalAPI("Transaction Id : ".rand(10,1000));
+        });
+
+Now goto app.php file of config folder and under Application service providers...list out newly created PaymentServiceProvider class as:
+=>        App\Providers\PaymentServiceProvider::class,
+
+now we are good to go .........serve the php artisan and put the usl /payment to see the result
+
+we can also implemnt deferrableProvider to specifically service running for any specific url not for all in laravel backgroud
+to do so goto PaymentServiceProvider.php
+
+import the 
+
+=> use Illuminate\Contracts\Support\DeferrableProvider;
+
+implement the deferrableProvider where class is starting as 
+
+class PaymentServiceProvider extends ServiceProvider implements DeferrableProvider
+
+then define it's "provides()" method as follows inside the class
+
+public function provides() : array
+    {
+        return [PayPalAPI::class];
+    }
+
+It will now use only some resources for given url only...so execution time increses.
+
+------------------------- Singleton ---------------------
+
